@@ -17,5 +17,6 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
     <PkgFSharp_Core Condition=" '$(PkgFSharp_Core)' == '' ">/Users/davidmeijer/.nuget/packages/fsharp.core/5.0.0</PkgFSharp_Core>
+    <PkgArgu Condition=" '$(PkgArgu)' == '' ">/Users/davidmeijer/.nuget/packages/argu/6.1.1</PkgArgu>
   </PropertyGroup>
 </Project>

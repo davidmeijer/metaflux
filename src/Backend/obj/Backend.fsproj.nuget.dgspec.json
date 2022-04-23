@@ -37,6 +37,11 @@
               "target": "Package",
               "version": "[5.0.0, )",
               "generatePathProperty": true
+            },
+            "MathNet.Numerics": {
+              "target": "Package",
+              "version": "[5.0.0, )",
+              "generatePathProperty": true
             }
           },
           "imports": [

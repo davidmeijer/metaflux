@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "mlfzC2K9lWExXU/JnmpL2P53mlpj9J3e15k+t31HH7gh+FSu1EbVg5g1tZqgkPcq/+NWr4FlCwuf2JTb7XDQ3Q==",
+  "dgSpecHash": "yqBLmSyDgqauaqQt9He5vGTMTZHKAU38f1KBrmwWJ8UZZe+QK21XCUi60agadbY0f//Wkdgf6SYuWCdDr3P/2w==",
   "success": true,
   "projectFilePath": "/Users/davidmeijer/demetrix/metaflux/src/Backend/Backend.fsproj",
   "expectedPackageFiles": [
-    "/Users/davidmeijer/.nuget/packages/fsharp.core/5.0.0/fsharp.core.5.0.0.nupkg.sha512"
+    "/Users/davidmeijer/.nuget/packages/fsharp.core/5.0.0/fsharp.core.5.0.0.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/mathnet.numerics/5.0.0/mathnet.numerics.5.0.0.nupkg.sha512"
   ],
   "logs": []
 }

@@ -1,10 +1,19 @@
 {
   "version": 2,
-  "dgSpecHash": "xktxOS4RV6z0KGI+4IiuMtqQ9T9ztS3dP/u5lkyAm5lQVSJ8BrQuHQZDU99omH4W0Ivk6osPp63EeV5fdtbhOA==",
+  "dgSpecHash": "11GUjPZ542l3ciyPZJ+m6UJPeh76rRLaqzGj53WrnqWPwCw2dEuCWklS6oOYzFHTyVHeG5cLWHo8YWeUirZNIg==",
   "success": true,
   "projectFilePath": "/Users/davidmeijer/demetrix/metaflux/src/Cli/Cli.fsproj",
   "expectedPackageFiles": [
-    "/Users/davidmeijer/.nuget/packages/fsharp.core/5.0.0/fsharp.core.5.0.0.nupkg.sha512"
+    "/Users/davidmeijer/.nuget/packages/argu/6.1.1/argu.6.1.1.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/fsharp.core/5.0.0/fsharp.core.5.0.0.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/mathnet.numerics/5.0.0/mathnet.numerics.5.0.0.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/system.configuration.configurationmanager/4.4.0/system.configuration.configurationmanager.4.4.0.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/system.security.cryptography.protecteddata/4.4.0/system.security.cryptography.protecteddata.4.4.0.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/microsoft.netcore.app.runtime.win-x64/5.0.10/microsoft.netcore.app.runtime.win-x64.5.0.10.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/microsoft.netcore.app.runtime.osx-x64/5.0.10/microsoft.netcore.app.runtime.osx-x64.5.0.10.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/microsoft.aspnetcore.app.runtime.win-x64/5.0.10/microsoft.aspnetcore.app.runtime.win-x64.5.0.10.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/microsoft.aspnetcore.app.runtime.osx-x64/5.0.10/microsoft.aspnetcore.app.runtime.osx-x64.5.0.10.nupkg.sha512",
+    "/Users/davidmeijer/.nuget/packages/microsoft.netcore.app.host.win-x64/5.0.10/microsoft.netcore.app.host.win-x64.5.0.10.nupkg.sha512"
   ],
   "logs": []
 }
