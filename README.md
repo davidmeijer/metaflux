@@ -1,0 +1,2 @@
+#### TO DO
+- Reimplement MathNet implementation of nullity matrix to fit needs metaflux program. Structural network analysis for conserved moieties, blocked reactions, and internal cycles is impacted by current implementation.

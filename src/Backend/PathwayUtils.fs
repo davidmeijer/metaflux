@@ -122,7 +122,22 @@ let printStructuralNetWorkAnalysis (pathway: Pathway) =
     // null space for this scenario with all extracellular rates as 0 is calculated. Any solution found
     // is an internal cycle.
     let internalCyclesMsg =
-        "Internal cycles check not yet implemented" // TODO
+        let identityMatrix = Matrix<float>.Build.DenseIdentity (pathway.NumFluxes())
+        let isConstrained =
+            pathway.FluxNames
+            |> Array.zip [| 0 .. pathway.FluxNames.Length - 1 |]
+            |> Array.filter (fun (_, fluxName) -> fluxName.StartsWith "ext_")
+            |> Array.map (fun (i, _) -> identityMatrix.Row i)
+            |> Matrix.Build.DenseOfRowVectors
+            |> pathway.Stoichiometry.Stack
+            |> (fun m -> m.Kernel()) 
+            |> Array.map (fun vec ->
+                vec.ToArray() |> Array.map (fun v -> v |> abs |> (>) 0.0) |> Array.contains true)
+            |> Array.contains true
+        if isConstrained then 
+            "Internal cycles in metabolic network"
+        else
+            "No internal cycles in metabolic network"
             
     let msg =
         [
