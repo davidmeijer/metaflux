@@ -116,6 +116,13 @@ let printStructuralNetWorkAnalysis (pathway: Pathway) =
             let blockedItems = blocked |> String.concat ", "
             $"Blocked reactions: {blockedItems}"
             
+    // Internal cycles are reactions that are decoupled from the extracellular observables (fluxes).
+    // I.e., a set of reactions that can operate when all extracellular rates are 0. Therefore, the
+    // null space for this scenario with all extracellular rates as 0 is calculated. Any solution found
+    // is an internal cycle.
+    let internalCyclesMsg =
+        "Internal cycles check not yet implemented" // TODO
+            
     let msg =
         [
             $"Number of fluxes: {pathway.NumFluxes()}"
@@ -124,6 +131,7 @@ let printStructuralNetWorkAnalysis (pathway: Pathway) =
             $"Degrees of freedom metabolic network: {pathway.NumDegreesOfFreedom()}"
             conservedMoietiesMsg
             blockedReactionsMsg
+            internalCyclesMsg
         ]
         |> String.concat "\n"
     printf $"\n{title}\n{underLine title}\n{msg}\n"
