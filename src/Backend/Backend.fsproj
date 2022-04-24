@@ -9,5 +9,6 @@
   <ItemGroup>
     <Compile Include="Types.fs" />
     <Compile Include="Parser.fs" />
+    <Compile Include="PathwayUtils.fs" />
   </ItemGroup>
 </Project>

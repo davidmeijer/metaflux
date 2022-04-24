@@ -30,7 +30,8 @@ module Program =
     open System
     open Argu
     open Utils
-    open Backend
+    open Backend.Parser
+    open Backend.PathwayUtils
     
     let [<EntryPoint>] main argv =
         let errorHandler = ProcessExiter(colorizer = function
@@ -48,10 +49,11 @@ module Program =
             match p.Contains(Network) with
             | true ->
                 let networkFilePath = p.GetResult(Network)
-                let pathway = Parser.parseNetworkFile networkFilePath
-                pathway.PrintReactions()
-                pathway.PrintBalances()
-                CliResult.Success "Success!"
+                let pathway = parseNetworkFile networkFilePath
+                printReactions pathway
+                printBalances pathway
+                printStructuralNetWorkAnalysis pathway
+                CliResult.Success "\nProgram ran successfully!"
             | _ ->
                 printfn $"{parser.PrintUsage()}"
                 CliResult.Fail "Path to network file not specified!"
