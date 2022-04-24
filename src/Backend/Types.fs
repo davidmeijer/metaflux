@@ -2,10 +2,6 @@ module Backend.Types
 
 open MathNet.Numerics.LinearAlgebra
 
-let underLine (s: string) =
-    [ for _ in s do yield "-" ]
-    |> String.concat ""
-
 type Pathway = {
     Stoichiometry : Matrix<float>
     FluxNames : array<string>

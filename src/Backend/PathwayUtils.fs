@@ -1,6 +1,7 @@
 module Backend.PathwayUtils
 
 open MathNet.Numerics.LinearAlgebra
+open Backend.GeneralUtils
 open Backend.Types
 
 /// List reactions from the pathway stoichiometric matrix.  
