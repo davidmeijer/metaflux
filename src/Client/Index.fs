@@ -37,7 +37,10 @@ open Feliz
 open Feliz.Bulma
 
 let private editor =
-    Html.div []
+    Html.div [
+        prop.className "editor"
+        prop.children []
+    ]
 
 let private messagePanel (isExpanded: bool) (messages: Message list) dispatch =
     let numMessages = messages.Length
@@ -84,7 +87,7 @@ let view (model: Model) (dispatch: Msg -> unit) =
     Html.div [
         prop.className "metaflux"
         prop.children [
-            editor
             messagePanel model.IsMessagePanelExpanded model.Messages dispatch
+            editor
         ]
     ]
