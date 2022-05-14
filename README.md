@@ -1,3 +1,7 @@
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+---
+
 # MetaFlux
 
 MetaFlux is a web application for metabolic flux modelling. The project is currently a work in progress.
