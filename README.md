@@ -4,7 +4,7 @@
 
 # MetaFlux
 
-MetaFlux is a web application for metabolic flux modelling. The project is currently a work in progress.
+MetaFlux is a web application for metabolic flux modelling. This project is a work in progress.
 
 ## Install pre-requisites
 
