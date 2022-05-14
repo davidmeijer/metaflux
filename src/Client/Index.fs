@@ -7,9 +7,11 @@ open Shared
 type Model = {
     Messages: Message list
     IsMessagePanelExpanded: bool
+    Nodes: Node []
 }
 
 type Msg =
+    | AddNode
     | RetrievedMessages of Message list
     | ToggleMessagePanel
 
@@ -22,24 +24,38 @@ let init () : Model * Cmd<Msg> =
     let model = {
         Messages = []
         IsMessagePanelExpanded = true
+        Nodes = [||]
     }
     model, Cmd.OfAsync.perform todosApi.getMessages () RetrievedMessages
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
+    | AddNode ->
+        // TODO: add draggable div node
+        printf "AddNode not yet implemented"
+        model, Cmd.none
     | RetrievedMessages messages ->
         { model with Messages = messages }, Cmd.none
     | ToggleMessagePanel ->
-        // TODO: resize top window
         { model with IsMessagePanelExpanded = not model.IsMessagePanelExpanded }, Cmd.none
 
 open Feliz
 open Feliz.Bulma
 
-let private editor =
+let private editor dispatch =
     Html.div [
         prop.className "editor"
-        prop.children []
+        prop.children [
+            Html.div [
+                prop.className "button"
+                prop.onClick (fun _ -> dispatch AddNode)
+                prop.children [
+                    Html.i [
+                        prop.className "fas fa-plus"
+                    ]
+                ]
+            ]
+        ]
     ]
 
 let private messagePanel (isExpanded: bool) (messages: Message list) dispatch =
@@ -88,6 +104,6 @@ let view (model: Model) (dispatch: Msg -> unit) =
         prop.className "metaflux"
         prop.children [
             messagePanel model.IsMessagePanelExpanded model.Messages dispatch
-            editor
+            editor dispatch
         ]
     ]
