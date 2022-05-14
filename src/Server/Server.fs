@@ -7,37 +7,23 @@ open Saturn
 open Shared
 
 type Storage() =
-    let todos = ResizeArray<_>()
-
-    member __.GetTodos() = List.ofSeq todos
-
-    member __.AddTodo(todo: Todo) =
-        if Todo.isValid todo.Description then
-            todos.Add todo
+    let messages = ResizeArray<_>()
+    member _.GetMessages() = List.ofSeq messages
+    member _.AddMessage(message: Message) =
+        if Message.isValid message.Description then
+            messages.Add message
             Ok()
         else
-            Error "Invalid todo"
+            Error "Invalid message!"
 
 let storage = Storage()
 
-storage.AddTodo(Todo.create "Create new SAFE project")
+storage.AddMessage(Message.create "Welcome to MetaFlux!")
 |> ignore
 
-storage.AddTodo(Todo.create "Write your app")
-|> ignore
-
-storage.AddTodo(Todo.create "Ship it !!!")
-|> ignore
-
-let todosApi =
-    { getTodos = fun () -> async { return storage.GetTodos() }
-      addTodo =
-          fun todo ->
-              async {
-                  match storage.AddTodo todo with
-                  | Ok () -> return todo
-                  | Error e -> return failwith e
-              } }
+let todosApi = {
+   getMessages = fun () -> async { return storage.GetMessages() }
+}
 
 let webApp =
     Remoting.createApi ()
