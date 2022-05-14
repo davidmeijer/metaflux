@@ -40,7 +40,10 @@ let private editor =
     Html.div []
 
 let private messagePanel (isExpanded: bool) (messages: Message list) dispatch =
+    let numMessages = messages.Length
+    let title = if numMessages = 0 then "Messages" else $"Messages ({numMessages})"
     Html.div [
+        prop.className "message-panel"
         prop.children [
             Html.div [
                 prop.className "message-panel-header"
@@ -51,7 +54,7 @@ let private messagePanel (isExpanded: bool) (messages: Message list) dispatch =
                         prop.children [
                             Html.span [
                                 prop.children [
-                                    Html.text "Messages"
+                                    Html.text title
                                 ]
                             ]
                         ]
@@ -79,6 +82,7 @@ let private messagePanel (isExpanded: bool) (messages: Message list) dispatch =
 
 let view (model: Model) (dispatch: Msg -> unit) =
     Html.div [
+        prop.className "metaflux"
         prop.children [
             editor
             messagePanel model.IsMessagePanelExpanded model.Messages dispatch
