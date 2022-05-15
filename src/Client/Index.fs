@@ -1,5 +1,6 @@
 module Index
 
+open System
 open Elmish
 open Fable.Remoting.Client
 open Shared
@@ -7,11 +8,13 @@ open Shared
 type Model = {
     Messages: Message list
     IsMessagePanelExpanded: bool
-    Nodes: Node []
+    Nodes: Node list
 }
 
 type Msg =
     | AddNode
+    | RemoveNode of Guid
+    | SetNodeName of Guid * string
     | RetrievedMessages of Message list
     | ToggleMessagePanel
 
@@ -24,16 +27,25 @@ let init () : Model * Cmd<Msg> =
     let model = {
         Messages = []
         IsMessagePanelExpanded = true
-        Nodes = [||]
+        Nodes = []
     }
     model, Cmd.OfAsync.perform todosApi.getMessages () RetrievedMessages
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
     | AddNode ->
-        // TODO: add draggable div node
-        printf "AddNode not yet implemented"
-        model, Cmd.none
+        { model with Nodes = model.Nodes @ [ Node.create 0.0 0.0 "new node" ] }, Cmd.none
+    | RemoveNode guid ->
+        { model with Nodes = model.Nodes |> List.filter (fun n -> n.Id <> guid) }, Cmd.none
+    | SetNodeName (guid, newName) ->
+        let nodes = [
+            for node in model.Nodes do
+                if node.Id = guid then
+                    yield { node with Name = newName }
+                else
+                    yield node
+        ]
+        { model with Nodes = nodes }, Cmd.none
     | RetrievedMessages messages ->
         { model with Messages = messages }, Cmd.none
     | ToggleMessagePanel ->
@@ -41,8 +53,19 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
 
 open Feliz
 open Feliz.Bulma
+open Fable.Core
 
-let private editor dispatch =
+open Browser
+open Browser.Types
+open Fable.Core.JsInterop
+open Fable.React
+open Fable.React.Props
+open Elmish
+open Fulma
+
+
+
+let private editor nodes dispatch =
     Html.div [
         prop.className "editor"
         prop.children [
@@ -55,8 +78,44 @@ let private editor dispatch =
                     ]
                 ]
             ]
+            for node in nodes do
+                Html.div [
+                    prop.className "node"
+                    prop.children [
+                        Html.div [
+                            prop.className "node-button-ribbon"
+                            prop.children [
+                                Html.div [
+                                    prop.className "node-button"
+                                    prop.onClick (fun _ -> dispatch (RemoveNode node.Id))
+                                    prop.children [
+                                        Html.i [
+                                            prop.className "fas fa-minus fa-xs"
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+//                        Html.div [
+//                            prop.className "node-name"
+//                            prop.text node.Name
+//                        ]
+                        div [ Class "input-container" ] [
+                            Field.div [  ] [
+                                Control.p [ Control.IsExpanded ] [
+                                    Input.input [
+                                        Input.Value node.Name
+                                        Input.Props [ DOMAttr.OnChange (fun ev -> (node.Id, ev.Value) |> SetNodeName |> dispatch)
+                                                      HTMLAttr.SpellCheck false ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
         ]
     ]
+
 
 let private messagePanel (isExpanded: bool) (messages: Message list) dispatch =
     let numMessages = messages.Length
@@ -104,6 +163,6 @@ let view (model: Model) (dispatch: Msg -> unit) =
         prop.className "metaflux"
         prop.children [
             messagePanel model.IsMessagePanelExpanded model.Messages dispatch
-            editor dispatch
+            editor model.Nodes dispatch
         ]
     ]

@@ -4,7 +4,7 @@ open System
 
 type Message = { Id: Guid; Description: string }
 
-type Node = { Id: Guid; X: float; Y: float; Description: string }
+type Node = { Id: Guid; X: float; Y: float; Extracellular: bool; Name: string }
 
 module Message =
     let isValid (description: string) =
@@ -13,8 +13,8 @@ module Message =
         { Id = Guid.NewGuid(); Description = description }
 
 module Node =
-    let create (x: float) (y: float) (description: string) =
-        { Id = Guid.NewGuid(); X = x; Y = y; Description = description }
+    let create (x: float) (y: float) (name: string) =
+        { Id = Guid.NewGuid(); X = x; Y = y; Extracellular = false; Name = name }
 
 module Route =
     let builder typeName methodName = sprintf "/api/%s/%s" typeName methodName
