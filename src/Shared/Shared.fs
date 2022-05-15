@@ -4,7 +4,18 @@ open System
 
 type Message = { Id: Guid; Description: string }
 
-type Node = { Id: Guid; X: float; Y: float; Extracellular: bool; Name: string }
+type DragTarget =
+    | NoTarget
+    | Dragging
+
+type Node = {
+    Id: Guid
+    X: float
+    Y: float
+    Extracellular: bool
+    Name: string
+    DragTarget: DragTarget
+}
 
 module Message =
     let isValid (description: string) =
@@ -14,7 +25,12 @@ module Message =
 
 module Node =
     let create (x: float) (y: float) (name: string) =
-        { Id = Guid.NewGuid(); X = x; Y = y; Extracellular = false; Name = name }
+        { Id = Guid.NewGuid()
+          X = 0.0
+          Y = 0.0
+          Extracellular = false
+          Name = name
+          DragTarget = NoTarget }
 
 module Route =
     let builder typeName methodName = sprintf "/api/%s/%s" typeName methodName

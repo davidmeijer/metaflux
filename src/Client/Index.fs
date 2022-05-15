@@ -1,14 +1,38 @@
 module Index
 
-open System
+open Browser
+open Browser.Types
 open Elmish
+open Fable.Core
 open Fable.Remoting.Client
+open Fable.Core.JsInterop
+open Fable.React
+open Fable.React.Props
+open Feliz
+open Feliz.Bulma
+open Fulma
 open Shared
+open System
+
+type MousePosition = { X: float; Y: float }
+
+[<RequireQualifiedAccess>]
+module Cmd =
+    let ups messageCtor =
+        let handler dispatch = window.addEventListener("mouseup", fun _ -> dispatch messageCtor)
+        [ handler ]
+
+    let move messageCtor =
+        let handler dispatch =
+            window.addEventListener("mousemove", fun ev ->
+                let ev = ev :?> MouseEvent
+                { X = ev.pageX; Y = ev.pageY } |> messageCtor |> dispatch)
+        [ handler ]
 
 type Model = {
     Messages: Message list
     IsMessagePanelExpanded: bool
-    Nodes: Node list
+    Nodes: Shared.Node list
 }
 
 type Msg =
@@ -17,6 +41,11 @@ type Msg =
     | SetNodeName of Guid * string
     | RetrievedMessages of Message list
     | ToggleMessagePanel
+    | MouseUp
+    | MouseMove of MousePosition
+    | NodeDrag of MousePosition
+    | NodeDragStarted of Guid
+    | NodeDragEnded
 
 let todosApi =
     Remoting.createApi ()
@@ -29,12 +58,17 @@ let init () : Model * Cmd<Msg> =
         IsMessagePanelExpanded = true
         Nodes = []
     }
-    model, Cmd.OfAsync.perform todosApi.getMessages () RetrievedMessages
+    let cmd = Cmd.batch [
+        Cmd.OfAsync.perform todosApi.getMessages () RetrievedMessages
+        Cmd.ups MouseUp
+        Cmd.move MouseMove
+    ]
+    model, cmd
 
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
     | AddNode ->
-        { model with Nodes = model.Nodes @ [ Node.create 0.0 145.0 "new node" ] }, Cmd.none
+        { model with Nodes = model.Nodes @ [ Shared.Node.create 0.0 0.0 "new node" ] }, Cmd.none
     | RemoveNode guid ->
         { model with Nodes = model.Nodes |> List.filter (fun n -> n.Id <> guid) }, Cmd.none
     | SetNodeName (guid, newName) ->
@@ -50,19 +84,36 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         { model with Messages = messages }, Cmd.none
     | ToggleMessagePanel ->
         { model with IsMessagePanelExpanded = not model.IsMessagePanelExpanded }, Cmd.none
+    | MouseUp ->
+        model, Cmd.ofMsg NodeDragEnded
+    | MouseMove (position: MousePosition) ->
+        model, Cmd.ofMsg (NodeDrag position)
+    | NodeDragStarted guid ->
+        let nodes = [
+            for node in model.Nodes do
+                if node.Id = guid then
+                    yield { node with DragTarget = Dragging }
+                else
+                    yield node
+        ]
+        { model with Nodes = nodes }, Cmd.none
+    | NodeDragEnded ->
+        let nodes = [
+            for node in model.Nodes do
+                yield { node with DragTarget = NoTarget }
+        ]
+        { model with Nodes = nodes }, Cmd.none
+    | NodeDrag (position: MousePosition) ->
+        let nodes = [
+            for node in model.Nodes do
+                if node.DragTarget = DragTarget.Dragging then
+                    yield { node with X = position.X; Y = position.Y }
+                else
+                    yield node
+        ]
+        {model with Nodes = nodes }, Cmd.none
 
-open Feliz
-open Feliz.Bulma
-open Fable.Core
-open Browser
-open Browser.Types
-open Fable.Core.JsInterop
-open Fable.React
-open Fable.React.Props
-open Elmish
-open Fulma
-
-let private editor nodes dispatch =
+let private editor (nodes: Shared.Node list) dispatch =
     Html.div [
         prop.className "editor"
         prop.children [
@@ -79,16 +130,15 @@ let private editor nodes dispatch =
                 Html.div [
                     prop.className "node"
                     prop.style [
-                        Feliz.style.top (length.px node.Y)
-                        Feliz.style.left (length.px node.X)
+                        style.top (length.px node.Y)
+                        style.left (length.px node.X)
                     ]
                     prop.children [
                         Html.div [
                             prop.className "node-button-ribbon"
-                            // https://www.w3schools.com/howto/howto_js_draggable.asp
-//                            prop.onMouseDown (fun ev -> TODO)
-//                            prop.onDrag (fun ev -> TODO)
-//                            prop.onDragEnd (fun ev -> TODO)
+                            prop.onMouseDown (fun ev ->
+                                ev.preventDefault()
+                                dispatch (NodeDragStarted node.Id))
                             prop.children [
                                 Html.div [
                                     prop.className "node-button"
