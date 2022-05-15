@@ -10,6 +10,7 @@ html, body {
 
 .message-panel {
     background-color: white;
+    z-index: 2;
 }
 
 .message-panel-header {
@@ -18,6 +19,7 @@ html, body {
     font-weight: bold;
     text-align: center;
     padding: 10px;
+    z-index: 2;
 }
 
 .message-panel-header:hover {
@@ -26,6 +28,7 @@ html, body {
 
 .message-panel-body {
     padding: 10px;
+    z-index: 2;
 }
 
 .editor {
@@ -41,21 +44,28 @@ html, body {
 }
 
 .node {
+    position: absolute;
     background-color: white;
     height: 60px;
     width: 100px;
     margin: 5px;
     border-radius: 3px;
+    z-index: 1;
 }
 
 .node-button-ribbon {
     width: 100%;
     height: 24px;
+    cursor: move;
 }
 
 .node-button {
     float: right;
     margin-right: 10px;
+}
+
+.node-button:hover {
+    cursor: pointer;
 }
 
 .node-name {

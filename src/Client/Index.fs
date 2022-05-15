@@ -34,7 +34,7 @@ let init () : Model * Cmd<Msg> =
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
     | AddNode ->
-        { model with Nodes = model.Nodes @ [ Node.create 0.0 0.0 "new node" ] }, Cmd.none
+        { model with Nodes = model.Nodes @ [ Node.create 0.0 145.0 "new node" ] }, Cmd.none
     | RemoveNode guid ->
         { model with Nodes = model.Nodes |> List.filter (fun n -> n.Id <> guid) }, Cmd.none
     | SetNodeName (guid, newName) ->
@@ -54,7 +54,6 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
 open Feliz
 open Feliz.Bulma
 open Fable.Core
-
 open Browser
 open Browser.Types
 open Fable.Core.JsInterop
@@ -62,8 +61,6 @@ open Fable.React
 open Fable.React.Props
 open Elmish
 open Fulma
-
-
 
 let private editor nodes dispatch =
     Html.div [
@@ -81,9 +78,17 @@ let private editor nodes dispatch =
             for node in nodes do
                 Html.div [
                     prop.className "node"
+                    prop.style [
+                        Feliz.style.top (length.px node.Y)
+                        Feliz.style.left (length.px node.X)
+                    ]
                     prop.children [
                         Html.div [
                             prop.className "node-button-ribbon"
+                            // https://www.w3schools.com/howto/howto_js_draggable.asp
+//                            prop.onMouseDown (fun ev -> TODO)
+//                            prop.onDrag (fun ev -> TODO)
+//                            prop.onDragEnd (fun ev -> TODO)
                             prop.children [
                                 Html.div [
                                     prop.className "node-button"
@@ -96,17 +101,16 @@ let private editor nodes dispatch =
                                 ]
                             ]
                         ]
-//                        Html.div [
-//                            prop.className "node-name"
-//                            prop.text node.Name
-//                        ]
                         div [ Class "input-container" ] [
                             Field.div [  ] [
                                 Control.p [ Control.IsExpanded ] [
                                     Input.input [
                                         Input.Value node.Name
-                                        Input.Props [ DOMAttr.OnChange (fun ev -> (node.Id, ev.Value) |> SetNodeName |> dispatch)
-                                                      HTMLAttr.SpellCheck false ]
+                                        Input.Props [
+                                            DOMAttr.OnChange (fun ev ->
+                                                dispatch (SetNodeName (node.Id, ev.Value)))
+                                            HTMLAttr.SpellCheck false
+                                        ]
                                     ]
                                 ]
                             ]
