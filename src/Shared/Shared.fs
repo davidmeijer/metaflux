@@ -17,6 +17,7 @@ type Node = {
     Extracellular: bool
     Name: string
     DragTarget: DragTarget
+    EdgesDropdownActivated: bool
 }
 
 type Edge = {
@@ -42,6 +43,7 @@ module Node =
         Extracellular = false
         Name = name
         DragTarget = NoTarget
+        EdgesDropdownActivated = false
     }
 
 module Edge =

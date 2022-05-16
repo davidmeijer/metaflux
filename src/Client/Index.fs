@@ -44,6 +44,8 @@ type Msg =
     | NodeDrag of MousePosition
     | NodeDragStarted of Guid * MousePosition
     | NodeDragEnded
+    | ToggleEdgeDropdown of Guid
+    | AddEdge of Guid * Guid
 
 let todosApi =
     Remoting.createApi ()
@@ -72,7 +74,23 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         let name = "new node"
         { model with Nodes = model.Nodes @ [ Shared.Node.create x y name ] }, Cmd.none
     | RemoveNode guid ->
-        { model with Nodes = model.Nodes |> List.filter (fun n -> n.Id <> guid) }, Cmd.none
+        let nodes = model.Nodes |> List.filter (fun n -> n.Id <> guid)
+
+        // Close open edge-dropdown windows if a single node is left.
+        let nodes =
+            if nodes.Length <= 1 then
+                [ for node in nodes do yield { node with EdgesDropdownActivated = false } ]
+            else
+                nodes
+
+        // Only keep edges for which source and target nodes still exist.
+        let edges = [
+            for edge in model.Edges do
+                if edge.Source <> guid && edge.Target <> guid then
+                    yield edge
+        ]
+
+        { model with Nodes = nodes; Edges = edges }, Cmd.none
     | SetNodeName (guid, newName) ->
         let nodes = [
             for node in model.Nodes do
@@ -128,12 +146,30 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
                 else
                     yield node
         ]
-        {model with Nodes = nodes }, Cmd.none
+        { model with Nodes = nodes }, Cmd.none
+    | ToggleEdgeDropdown guid ->
+        let nodes = [
+            for node in model.Nodes do
+                if node.Id = guid then
+                    yield { node with EdgesDropdownActivated = not node.EdgesDropdownActivated }
+                else
+                    yield node
+        ]
+        { model with Nodes = nodes }, Cmd.none
+    | AddEdge (source: Guid, target: Guid) ->
+        // Only add directed edge if it does not yet exist.
+        let edges =
+            if [ for e in model.Edges do yield e.Source = source && e.Target = target ] |> List.contains true then
+                model.Edges
+            else
+                model.Edges @ [ { Source = source; Target = target } ]
+        { model with Edges = edges }, Cmd.none
 
-let private editor (nodes: Shared.Node list) dispatch =
+let private editor (nodes: Shared.Node list) (edges: Shared.Edge list) dispatch =
     Html.div [
         prop.className "editor"
         prop.children [
+            // Include "add node" button.
             Html.div [
                 prop.className "button"
                 prop.onClick (fun _ -> dispatch AddNode)
@@ -143,6 +179,35 @@ let private editor (nodes: Shared.Node list) dispatch =
                     ]
                 ]
             ]
+
+            // Include edges.
+            for edge in edges do
+                let getNode (guid: Guid) =
+                    match nodes |> List.filter (fun n -> n.Id = guid) with
+                    | first::rest when rest.Length = 0 -> Some first
+                    | _ -> None
+                let source =
+                    match getNode edge.Source with
+                    | Some n -> n
+                    | None -> raise (Exception("Source node of edge does not exist!")) // TODO
+                let target =
+                    match getNode edge.Target with
+                    | Some n -> n
+                    | None -> raise (Exception("Target node of edge does not exist!")) // TODO
+                let dist = sqrt(((source.X - target.X) ** 2.0) + ((source.Y - target.Y) ** 2.0))
+                let deg = 0.0 // TODO: calculate angle between two lines
+                Html.div [
+                    prop.className "edge"
+                    prop.style [
+                        style.left (length.px source.X)
+                        style.top (length.px source.Y)
+                        style.height (length.px dist)
+                        style.width (length.px 5.0)
+                        style.transform.rotate deg
+                    ]
+                ]
+
+            // Include nodes.
             for node in nodes do
                 Html.div [
                     prop.id (string node.Id)
@@ -185,6 +250,46 @@ let private editor (nodes: Shared.Node list) dispatch =
                                 ]
                             ]
                         ]
+                        let otherNodes = nodes |> List.filter (fun n -> n.Id <> node.Id)
+                        let availableEdges = otherNodes.Length <> 0
+                        Html.div [
+                            prop.className "node-select-edges"
+                            prop.children [
+                                Dropdown.dropdown [
+                                    Dropdown.CustomClass "node-select-edges-dropdown"
+                                    Dropdown.IsActive node.EdgesDropdownActivated
+                                ] [
+                                    Dropdown.trigger [
+                                        GenericOption.CustomClass "node-select-edges-trigger"
+                                    ] [
+                                        Button.button [
+                                            Button.CustomClass "node-select-edges-button"
+                                            Button.Option.IsFullWidth
+                                            Button.Option.Disabled (not availableEdges)
+                                            Button.OnClick (fun _ -> dispatch (ToggleEdgeDropdown node.Id))
+                                        ] [
+                                            span [  ] [ str "edge to..." ]
+                                        ]
+                                    ]
+                                    Dropdown.menu [  ] [
+                                        div [ Class "node-select-edges-dropdown-menu" ] [
+                                            for target in otherNodes do
+                                                Dropdown.Item.a [
+                                                    Dropdown.Item.Option.CustomClass "node-select-edges-dropdown-menu-item"
+                                                    Dropdown.Item.Props [
+                                                        OnClick (fun _ -> dispatch (AddEdge (node.Id, target.Id)))
+                                                    ]
+                                                ] [
+                                                    Html.i [
+                                                        prop.className "fas fa-angle-right"
+                                                    ]
+                                                    str (" " + target.Name)
+                                                ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
                     ]
                 ]
         ]
@@ -193,7 +298,7 @@ let private editor (nodes: Shared.Node list) dispatch =
 
 let private messagePanel (isExpanded: bool) (messages: Message list) dispatch =
     let numMessages = messages.Length
-    let title = if numMessages = 0 then "Messages" else $"Messages ({numMessages})"
+    let title = if numMessages = 0 then "Messages " else $"Messages ({numMessages}) "
     Html.div [
         prop.className "message-panel"
         prop.children [
@@ -207,6 +312,9 @@ let private messagePanel (isExpanded: bool) (messages: Message list) dispatch =
                             Html.span [
                                 prop.children [
                                     Html.text title
+                                    Html.i [
+                                        prop.className ("fas " + (if isExpanded then "fa-angle-up" else "fa-angle-down"))
+                                    ]
                                 ]
                             ]
                         ]
@@ -237,6 +345,6 @@ let view (model: Model) (dispatch: Msg -> unit) =
         prop.className "metaflux"
         prop.children [
             messagePanel model.IsMessagePanelExpanded model.Messages dispatch
-            editor model.Nodes dispatch
+            editor model.Nodes model.Edges dispatch
         ]
     ]

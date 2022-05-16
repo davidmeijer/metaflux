@@ -44,11 +44,16 @@ html, body {
     z-index: 3;
 }
 
+.edge {
+    z-index: 0;
+    background: black;
+}
+
 .node {
     position: absolute;
     background-color: white;
-    height: 60px;
-    width: 100px;
+    height: 104px;
+    width: 192px;
     margin: 5px;
     border-radius: 3px;
     z-index: 1;
@@ -71,10 +76,42 @@ html, body {
 
 .node-name-input-container {
     width: 100%;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
+    height: 40px;
+    border-radius: 0;
+    text-align: center;
 }
 
-.node-name {
-    text-align: center;
+.node-select-edges {
+    width: 100%;
+    height: 40px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+.node-select-edges-dropdown {
+    width: 100%;
+    height: 40px;
+}
+
+.node-select-edges-trigger {
+    width: 100%;
+    height: 40px;
+}
+
+.node-select-edges-button {
+    width: 100%;
+    height: 40px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+    margin: 0;
+}
+
+.node-select-edges-dropdown-menu {
+    border-color: black;
+    border-width: 3px;
+    background-color: white;
 }
