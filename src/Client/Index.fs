@@ -3,13 +3,10 @@ module Index
 open Browser
 open Browser.Types
 open Elmish
-open Fable.Core
 open Fable.Remoting.Client
-open Fable.Core.JsInterop
 open Fable.React
 open Fable.React.Props
 open Feliz
-open Feliz.Bulma
 open Fulma
 open Shared
 open System
@@ -33,6 +30,7 @@ type Model = {
     Messages: Message list
     IsMessagePanelExpanded: bool
     Nodes: Shared.Node list
+    Edges: Shared.Edge list
 }
 
 type Msg =
@@ -44,7 +42,7 @@ type Msg =
     | MouseUp
     | MouseMove of MousePosition
     | NodeDrag of MousePosition
-    | NodeDragStarted of Guid
+    | NodeDragStarted of Guid * MousePosition
     | NodeDragEnded
 
 let todosApi =
@@ -57,6 +55,7 @@ let init () : Model * Cmd<Msg> =
         Messages = []
         IsMessagePanelExpanded = true
         Nodes = []
+        Edges = []
     }
     let cmd = Cmd.batch [
         Cmd.OfAsync.perform todosApi.getMessages () RetrievedMessages
@@ -68,7 +67,10 @@ let init () : Model * Cmd<Msg> =
 let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     match msg with
     | AddNode ->
-        { model with Nodes = model.Nodes @ [ Shared.Node.create 0.0 0.0 "new node" ] }, Cmd.none
+        let x = window.innerWidth / 2.0
+        let y = window.innerHeight / 2.0
+        let name = "new node"
+        { model with Nodes = model.Nodes @ [ Shared.Node.create x y name ] }, Cmd.none
     | RemoveNode guid ->
         { model with Nodes = model.Nodes |> List.filter (fun n -> n.Id <> guid) }, Cmd.none
     | SetNodeName (guid, newName) ->
@@ -88,11 +90,17 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         model, Cmd.ofMsg NodeDragEnded
     | MouseMove (position: MousePosition) ->
         model, Cmd.ofMsg (NodeDrag position)
-    | NodeDragStarted guid ->
+    | NodeDragStarted (guid, position) ->
+        let elmnt = document.getElementById(string guid)
         let nodes = [
             for node in model.Nodes do
                 if node.Id = guid then
-                    yield { node with DragTarget = Dragging }
+                    yield {
+                        node with
+                            DragTarget = Dragging
+                            OffsetX = position.X - elmnt.offsetLeft
+                            OffsetY = position.Y - elmnt.offsetTop
+                    }
                 else
                     yield node
         ]
@@ -100,14 +108,23 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | NodeDragEnded ->
         let nodes = [
             for node in model.Nodes do
-                yield { node with DragTarget = NoTarget }
+                yield {
+                    node with
+                        DragTarget = NoTarget
+                        OffsetX = 0.0
+                        OffsetY = 0.0
+                }
         ]
         { model with Nodes = nodes }, Cmd.none
     | NodeDrag (position: MousePosition) ->
         let nodes = [
             for node in model.Nodes do
                 if node.DragTarget = DragTarget.Dragging then
-                    yield { node with X = position.X; Y = position.Y }
+                    yield {
+                        node with
+                            X = position.X - node.OffsetX
+                            Y = position.Y - node.OffsetY
+                    }
                 else
                     yield node
         ]
@@ -128,17 +145,19 @@ let private editor (nodes: Shared.Node list) dispatch =
             ]
             for node in nodes do
                 Html.div [
+                    prop.id (string node.Id)
                     prop.className "node"
                     prop.style [
-                        style.top (length.px node.Y)
                         style.left (length.px node.X)
+                        style.top (length.px node.Y)
                     ]
                     prop.children [
                         Html.div [
                             prop.className "node-button-ribbon"
                             prop.onMouseDown (fun ev ->
                                 ev.preventDefault()
-                                dispatch (NodeDragStarted node.Id))
+                                let coordsMouseDown = { X = ev.pageX; Y = ev.pageY }
+                                dispatch (NodeDragStarted (node.Id, coordsMouseDown)))
                             prop.children [
                                 Html.div [
                                     prop.className "node-button"
@@ -151,10 +170,11 @@ let private editor (nodes: Shared.Node list) dispatch =
                                 ]
                             ]
                         ]
-                        div [ Class "input-container" ] [
-                            Field.div [  ] [
+                        div [ ] [
+                            Field.div [ ] [
                                 Control.p [ Control.IsExpanded ] [
                                     Input.input [
+                                        Input.CustomClass "node-name-input-container"
                                         Input.Value node.Name
                                         Input.Props [
                                             DOMAttr.OnChange (fun ev ->

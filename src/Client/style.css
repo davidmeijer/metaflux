@@ -41,6 +41,7 @@ html, body {
     width: 50px;
     border-radius: 50%;
     margin: 5px;
+    z-index: 3;
 }
 
 .node {
@@ -66,6 +67,12 @@ html, body {
 
 .node-button:hover {
     cursor: pointer;
+}
+
+.node-name-input-container {
+    width: 100%;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
 }
 
 .node-name {
