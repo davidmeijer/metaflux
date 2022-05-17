@@ -11,7 +11,7 @@ open Fulma
 open Shared
 open System
 
-type MousePosition = { X: float; Y: float }
+type Position = { X: float; Y: float }
 
 [<RequireQualifiedAccess>]
 module Cmd =
@@ -40,9 +40,9 @@ type Msg =
     | RetrievedMessages of Message list
     | ToggleMessagePanel
     | MouseUp
-    | MouseMove of MousePosition
-    | NodeDrag of MousePosition
-    | NodeDragStarted of Guid * MousePosition
+    | MouseMove of Position
+    | NodeDrag of Position
+    | NodeDragStarted of Guid * Position
     | NodeDragEnded
     | ToggleEdgeDropdown of Guid
     | AddEdge of Guid * Guid
@@ -106,7 +106,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         { model with IsMessagePanelExpanded = not model.IsMessagePanelExpanded }, Cmd.none
     | MouseUp ->
         model, Cmd.ofMsg NodeDragEnded
-    | MouseMove (position: MousePosition) ->
+    | MouseMove (position: Position) ->
         model, Cmd.ofMsg (NodeDrag position)
     | NodeDragStarted (guid, position) ->
         let elmnt = document.getElementById(string guid)
@@ -134,7 +134,7 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
                 }
         ]
         { model with Nodes = nodes }, Cmd.none
-    | NodeDrag (position: MousePosition) ->
+    | NodeDrag (position: Position) ->
         let nodes = [
             for node in model.Nodes do
                 if node.DragTarget = DragTarget.Dragging then
@@ -182,28 +182,26 @@ let private editor (nodes: Shared.Node list) (edges: Shared.Edge list) dispatch 
 
             // Include edges.
             for edge in edges do
-                let getNode (guid: Guid) =
+                let getPos (guid: Guid) =
                     match nodes |> List.filter (fun n -> n.Id = guid) with
-                    | first::rest when rest.Length = 0 -> Some first
-                    | _ -> None
-                let source =
-                    match getNode edge.Source with
-                    | Some n -> n
-                    | None -> raise (Exception("Source node of edge does not exist!")) // TODO
-                let target =
-                    match getNode edge.Target with
-                    | Some n -> n
-                    | None -> raise (Exception("Target node of edge does not exist!")) // TODO
-                let dist = sqrt(((source.X - target.X) ** 2.0) + ((source.Y - target.Y) ** 2.0))
-                let deg = 0.0 // TODO: calculate angle between two lines
+                    | first::rest when rest.Length = 0 ->
+                        let elmnt = document.getElementById(string first.Id)
+                        let offsetX, offsetY = elmnt.clientWidth / 2.0, elmnt.clientHeight / 2.0
+                        { X = first.X + offsetX; Y = first.Y + offsetY }
+                    | _ -> raise (Exception($"Edge connecting to node {guid} does not exist!"))
+                let src, tgt = getPos edge.Source, getPos edge.Target
+                let centerX = (src.X + tgt.X) / 2.0
+                let centerY = (src.Y + tgt.Y) / 2.0
+                let angle = (Math.Atan2(src.Y - tgt.Y, src.X - tgt.X) * 180.0) / Math.PI
+                let dist = Math.Sqrt(Math.Pow((tgt.X - src.X), 2.0) + Math.Pow((tgt.Y - src.Y), 2.0))
+
                 Html.div [
                     prop.className "edge"
                     prop.style [
-                        style.left (length.px source.X)
-                        style.top (length.px source.Y)
-                        style.height (length.px dist)
-                        style.width (length.px 5.0)
-                        style.transform.rotate deg
+                        style.width (length.px dist)
+                        style.transform.rotate angle
+                        style.top (length.px centerY)
+                        style.left (length.px (centerX - (dist / 2.0)))
                     ]
                 ]
 
